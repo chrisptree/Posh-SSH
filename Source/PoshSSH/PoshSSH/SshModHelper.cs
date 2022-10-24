@@ -1,7 +1,10 @@
 ﻿using Renci.SshNet;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Management.Automation;
+using System.Runtime.InteropServices;
+using System.Security;
 
 namespace SSH
 {
@@ -17,6 +20,20 @@ namespace SSH
                 obj.Properties.Add(new PSNoteProperty(noteProperty.Key.ToString(), noteProperty.Value));
             }
             return obj;
+        }
+
+        public static String SecureStringToString(SecureString value)
+        {
+            IntPtr valuePtr = IntPtr.Zero;
+            try
+            {
+                valuePtr = Marshal.SecureStringToGlobalAllocUnicode(value);
+                return Marshal.PtrToStringUni(valuePtr);
+            }
+            finally
+            {
+                Marshal.ZeroFreeGlobalAllocUnicode(valuePtr);
+            }
         }
 
         public static SshSession AddToSshSessionCollection(SshClient sshclient, SessionState pssession)

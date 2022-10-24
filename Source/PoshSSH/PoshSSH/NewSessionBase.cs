@@ -8,6 +8,7 @@ using System.Management.Automation.Host;
 using System.Text;
 using System.IO;
 using System.Linq;
+using System.Security;
 
 namespace SSH
 {
@@ -33,12 +34,23 @@ namespace SSH
         /// Credentials for Connection
         /// </summary>
         [ValidateNotNullOrEmpty]
-        [Parameter(Mandatory = true,
+        [Parameter(Mandatory = false,
+            ParameterSetName = "Key",
             ValueFromPipelineByPropertyName = true,
             Position = 1,
-            HelpMessage = "SSH Credentials to use for connecting to a server. If a key file is used the password field is used for the Key pass phrase.")]
+            HelpMessage = "SSH Credentials to use for connecting to a server.")]
+        [Parameter(Mandatory = true,
+            ParameterSetName = "password",
+            ValueFromPipelineByPropertyName = true,
+            Position = 1,
+            HelpMessage = "SSH Credentials to use for connecting to a server.")]
+        [Parameter(Mandatory = true,
+            ParameterSetName = "UserPasswordAndKeyCredential",
+            ValueFromPipelineByPropertyName = true,
+            Position = 1,
+            HelpMessage = "SSH Credentials to use for connecting to a server.")]
         [Credential()]
-        public PSCredential Credential { get; set; }        
+        public PSCredential Credential { get; set; }
 
         /// <summary>
         /// Port for SSH
@@ -48,6 +60,49 @@ namespace SSH
             HelpMessage = "SSH TCP Port number to use for the SSH connection.")]
         public Int32 Port { get; set; } = 22;
 
+        /// <summary>
+        /// SSH Key File
+        /// </summary>
+        [Parameter(Mandatory = false,
+            ValueFromPipelineByPropertyName = true,
+            ParameterSetName = "Key",
+            HelpMessage = "OpenSSH format SSH private key file.")]
+        [Parameter(Mandatory = false,
+            ValueFromPipelineByPropertyName = true,
+            ParameterSetName = "UserPasswordAndKeyCredential",
+            HelpMessage = "OpenSSH format SSH private key file.")]
+        public string KeyFile { get; set; } = null;
+
+        /// <summary>
+        /// SSH Key File
+        /// </summary>
+        [Parameter(Mandatory = false,
+            ValueFromPipelineByPropertyName = true,
+            ParameterSetName = "Key",
+            HelpMessage = "Key phrase to use to open the SSH private key file.")]
+        [Parameter(Mandatory = false,
+            ValueFromPipelineByPropertyName = true,
+            ParameterSetName = "UserPasswordAndKeyCredential",
+            HelpMessage = "Key phrase to use to open the SSH private key file.")]
+        public SecureString KeyPhrase { get; set; } = null;
+
+        /// <summary>
+        /// SSH Key Content
+        /// </summary>
+        [Parameter(Mandatory = false,
+            ValueFromPipelineByPropertyName = true,
+            ParameterSetName = "KeyString",
+            HelpMessage = "String array of the content of a OpenSSH key file.")]
+        public string[] KeyString { get; set; } = new string[] { };
+
+        /// <summary>
+        /// Auto Accept key fingerprint 
+        /// </summary>
+        [Parameter(Mandatory = true,
+            ValueFromPipelineByPropertyName = true,
+            ParameterSetName = "UserPasswordAndKeyCredential",
+            HelpMessage = "Indicate that the authentication is the usename/password and the key is used to authenticate the session")]
+        public SwitchParameter IsUserPasswordAndKeyAuthentication { get; set; } = false;
 
         /// <summary>
         /// Proxy Server to use
@@ -65,7 +120,6 @@ namespace SSH
             HelpMessage = "Port to connect to on proxy server to route connection.")]
         public Int32 ProxyPort { get; set; } = 8080;
 
-
         /// <summary>
         /// Proxy Credentials
         /// </summary>
@@ -76,33 +130,14 @@ namespace SSH
         [System.Management.Automation.CredentialAttribute()]
         public PSCredential ProxyCredential { get; set; }
 
-
         /// <summary>
         /// Proxy Type
         /// </summary>
         [ValidateSet("HTTP", "Socks4", "Socks5", IgnoreCase = true)]
         [Parameter(Mandatory = false,
             ValueFromPipelineByPropertyName = true,
-            HelpMessage = "Type of Proxy being used (HTTP, Socks4 or Socks5).")]
+            HelpMessage = "Type of Proxy being used (HTTP, Socks4, or Socks5).")]
         public string ProxyType { get; set; } = "HTTP";
-
-        /// <summary>
-        /// SSH Key File
-        /// </summary>
-        [Parameter(Mandatory = false,
-            ValueFromPipelineByPropertyName = true,
-            ParameterSetName = "Key",
-            HelpMessage = "OpenSSH format SSH private key file.")]
-        public string KeyFile { get; set; } = null;
-
-        /// <summary>
-        /// SSH Key Content
-        /// </summary>
-        [Parameter(Mandatory = false,
-            ValueFromPipelineByPropertyName = true,
-            ParameterSetName = "KeyString",
-            HelpMessage = "String array of the content of a OpenSSH key file.")]
-        public string[] KeyString { get; set; } = new string[] { };
 
         /// <summary>
         /// ConnectionTimeout Parameter
@@ -194,6 +229,9 @@ namespace SSH
                 (ActionPreference)this.SessionState.PSVariable.GetValue("VerbosePreference") != ActionPreference.SilentlyContinue;
 
             ConnectionInfo connectInfo = null;
+            ProviderInfo provider;
+            Collection<string> pathinfo;
+            string localfullPath;
             switch (ParameterSetName)
             {
                 case "NoKey":
@@ -221,13 +259,13 @@ namespace SSH
 
                 case "Key":
                     WriteVerbose("Using SSH Key authentication for connection (file).");
-                    ProviderInfo provider;
-                    var pathinfo = GetResolvedProviderPathFromPSPath(KeyFile, out provider);
-                    var localfullPath = pathinfo[0];
+                    pathinfo = GetResolvedProviderPathFromPSPath(KeyFile, out provider);
+                    localfullPath = pathinfo[0];
                     connectInfo = ConnectionInfoGenerator.GetKeyConnectionInfo(computer,
                         Port,
                         localfullPath,
                         Credential,
+                        KeyPhrase,
                         ProxyServer,
                         ProxyType,
                         ProxyPort,
@@ -240,10 +278,27 @@ namespace SSH
                         Port,
                         KeyString,
                         Credential,
+                        KeyPhrase,
                         ProxyServer,
                         ProxyType,
                         ProxyPort,
                         ProxyCredential);
+                    break;
+
+                case "UserPasswordAndKeyCredential":
+                    WriteVerbose("Using Username/Password and SSH Key authentication for connection (file).");
+                    pathinfo = GetResolvedProviderPathFromPSPath(KeyFile, out provider);
+                    localfullPath = pathinfo[0];
+                    connectInfo = ConnectionInfoGenerator.GetKeyConnectionInfo(computer,
+                        Port,
+                        localfullPath,
+                        Credential,
+                        KeyPhrase,
+                        ProxyServer,
+                        ProxyType,
+                        ProxyPort,
+                        ProxyCredential,
+                        IsUserPasswordAndKeyAuthentication);
                     break;
 
                 default:

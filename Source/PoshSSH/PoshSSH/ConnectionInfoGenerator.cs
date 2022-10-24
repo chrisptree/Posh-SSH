@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Management.Automation;
+using System.Security;
 using Renci.SshNet;
 
 namespace SSH
@@ -14,56 +15,64 @@ namespace SSH
         /// <param name="port"></param>
         /// <param name="keyfile"></param>
         /// <param name="credential"></param>
+        /// <param name="keyPhrase"></param>
         /// <param name="proxyserver"></param>
         /// <param name="proxytype"></param>
         /// <param name="proxyport"></param>
         /// <param name="proxycredential"></param>
+        /// <param name="isUserPasswordAndKeyAuthentication"></param>
         /// <returns></returns>
-        public static PrivateKeyConnectionInfo GetKeyConnectionInfo(string computer,
+        public static ConnectionInfo GetKeyConnectionInfo(string computer,
             int port,
             string keyfile,
             PSCredential credential,
+            SecureString keyPhrase,
             string proxyserver,
             string proxytype,
             int proxyport,
-            PSCredential proxycredential)
+            PSCredential proxycredential,
+            bool isUserPasswordAndKeyAuthentication = false)
 
         {
             string fullPath = Path.GetFullPath(keyfile);
             if (!File.Exists(fullPath))
                 throw new FileNotFoundException("File " + fullPath + " not found");
             var keyFileStream = File.OpenRead(@fullPath);
-            return GetKeyConnectionInfo(computer, port, keyFileStream, credential, proxyserver, proxytype, proxyport, proxycredential);
+            return GetKeyConnectionInfo(computer, port, keyFileStream, credential, keyPhrase, proxyserver, proxytype, proxyport, proxycredential, isUserPasswordAndKeyAuthentication);
         }
-        public static PrivateKeyConnectionInfo GetKeyConnectionInfo(string computer,
+        public static ConnectionInfo GetKeyConnectionInfo(string computer,
             int port,
             string[] keycontent,
             PSCredential credential,
+            SecureString keyPhrase,
             string proxyserver,
             string proxytype,
             int proxyport,
-            PSCredential proxycredential)
+            PSCredential proxycredential,
+            bool isUserPasswordAndKeyAuthentication = false)
         {
             var keyFileStream = new MemoryStream(System.Text.Encoding.Default.GetBytes(String.Join("\n", keycontent)));
 
-            return GetKeyConnectionInfo(computer, port, keyFileStream, credential, proxyserver, proxytype, proxyport, proxycredential);
+            return GetKeyConnectionInfo(computer, port, keyFileStream, credential, keyPhrase, proxyserver, proxytype, proxyport, proxycredential, isUserPasswordAndKeyAuthentication);
         }
-        private static PrivateKeyConnectionInfo GetKeyConnectionInfo(string computer,
+        private static ConnectionInfo GetKeyConnectionInfo(string computer,
             int port,
             Stream keyFileStream,
             PSCredential credential,
+            SecureString keyPhrase,
             string proxyserver,
             string proxytype,
             int proxyport,
-            PSCredential proxycredential)
+            PSCredential proxycredential,
+            bool isUserPasswordAndKeyAuthentication = false)
         {
-            PrivateKeyConnectionInfo connectionInfo;
+            ConnectionInfo connectionInfo;
             // Create the key object.
             PrivateKeyFile sshkey;
-            if (credential.GetNetworkCredential().Password == String.Empty)
+            if (keyPhrase == null)
                 sshkey = new PrivateKeyFile(keyFileStream);
             else
-                sshkey = new PrivateKeyFile(keyFileStream, credential.GetNetworkCredential().Password);
+                sshkey = new PrivateKeyFile(keyFileStream, keyPhrase.ToUnsecureString());
 
             if (proxyserver != String.Empty)
             {
@@ -84,35 +93,86 @@ namespace SSH
 
                 if (proxycredential == null)
                 {
-                    connectionInfo = new PrivateKeyConnectionInfo(computer,
-                        port,
-                        credential.UserName,
-                        ptype,
-                        proxyserver,
-                        proxyport,
-                        sshkey);
+                    if (!isUserPasswordAndKeyAuthentication)
+                    {
+                        connectionInfo = new PrivateKeyConnectionInfo(computer,
+                            port,
+                            credential.UserName,
+                            ptype,
+                            proxyserver,
+                            proxyport,
+                            sshkey);
+                    }
+                    else
+                    {
+                        var keyFiles = new[] { sshkey };
+                        var authMethods = new AuthenticationMethod[] {
+                            new PasswordAuthenticationMethod(credential.UserName, credential.GetNetworkCredential().Password),
+                            new PrivateKeyAuthenticationMethod(credential.UserName, keyFiles)};
+                        connectionInfo = new ConnectionInfo(computer,
+                            port,
+                            credential.UserName,
+                            ptype,
+                            proxyserver,
+                            proxyport,
+                            String.Empty,
+                            String.Empty,
+                            authMethods);
+                    }
                 }
                 else
                 {
+                    if (!isUserPasswordAndKeyAuthentication)
+                    {
+                        connectionInfo = new PrivateKeyConnectionInfo(computer,
+                            port,
+                            credential.UserName,
+                            ptype,
+                            proxyserver,
+                            proxyport,
+                            proxycredential.UserName,
+                            sshkey);
+                    }
+                    else
+                    {
+                        var keyFiles = new[] { sshkey };
+                        var authMethods = new AuthenticationMethod[] {
+                            new PasswordAuthenticationMethod(credential.UserName, credential.GetNetworkCredential().Password),
+                            new PrivateKeyAuthenticationMethod(credential.UserName, keyFiles)};
+                        connectionInfo = new ConnectionInfo(computer,
+                            port,
+                            credential.UserName,
+                            ptype,
+                            proxyserver,
+                            proxyport,
+                            String.Empty,
+                            String.Empty,
+                            authMethods);
+                    }
 
-                    connectionInfo = new PrivateKeyConnectionInfo(computer,
-                        port,
-                        credential.UserName,
-                        ptype,
-                        proxyserver,
-                        proxyport,
-                        proxycredential.UserName,
-                        proxycredential.GetNetworkCredential().Password,
-                        sshkey);
                 }
             }
             else // Handle connection with no proxy server
             {
+                if (!isUserPasswordAndKeyAuthentication)
+                {
+                    connectionInfo = new PrivateKeyConnectionInfo(computer,
+                        port,
+                        credential.UserName,
+                        sshkey);
+                }
+                else
+                {
+                    var keyFiles = new[] { sshkey };
+                    var authMethods = new AuthenticationMethod[] {
+                            new PasswordAuthenticationMethod(credential.UserName, credential.GetNetworkCredential().Password),
+                            new PrivateKeyAuthenticationMethod(credential.UserName, keyFiles)};
+                    connectionInfo = new ConnectionInfo(computer,
+                        port,
+                        credential.UserName,
+                        authMethods);
+                }
 
-                connectionInfo = new PrivateKeyConnectionInfo(computer,
-                    port,
-                    credential.UserName,
-                    sshkey);
 
             }
             return connectionInfo;

@@ -56,12 +56,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ToUnsecureString.cs" />
     <Compile Include="ConnectionInfoGenerator.cs" />
     <Compile Include="GetScpFile.cs" />
     <Compile Include="GetScpFolder.cs" />
     <Compile Include="GetScpItem.cs" />
     <Compile Include="GetSftpFile.cs" />
     <Compile Include="GetSftpItem.cs" />
+    <Compile Include="UserPasswordAndKeyCredential.cs" />
     <Compile Include="NewMemoryStore.cs" />
     <Compile Include="NewSessionBase.cs" />
     <Compile Include="NewSshJsonStore.cs" />

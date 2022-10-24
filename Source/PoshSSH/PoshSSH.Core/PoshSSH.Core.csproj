@@ -10,6 +10,8 @@
 
   <ItemGroup>
     <Compile Include="..\PoshSSH\ConnectionInfoGenerator.cs" Link="ConnectionInfoGenerator.cs" />
+    <Compile Include="..\PoshSSH\ToUnsecureString.cs" Link="ToUnsecureString.cs" />
+    <Compile Include="..\PoshSSH\UserPasswordAndKeyCredential.cs" Link="UserPasswordAndKeyCredential.cs" />
     <Compile Include="..\PoshSSH\GetScpItem.cs" Link="GetScpItem.cs" />
     <Compile Include="..\PoshSSH\GetSftpItem.cs" Link="GetSftpItem.cs" />
     <Compile Include="..\PoshSSH\NewSessionBase.cs" Link="NewSessionBase.cs" />
