@@ -130,6 +130,7 @@ namespace SSH
                             proxyserver,
                             proxyport,
                             proxycredential.UserName,
+                            proxycredential.GetNetworkCredential().Password,
                             sshkey);
                     }
                     else
@@ -144,8 +145,8 @@ namespace SSH
                             ptype,
                             proxyserver,
                             proxyport,
-                            String.Empty,
-                            String.Empty,
+                            proxycredential.UserName,
+                            proxycredential.GetNetworkCredential().Password,
                             authMethods);
                     }
 
