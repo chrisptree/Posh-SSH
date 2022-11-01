@@ -24,7 +24,7 @@ New-SSHSession [-ComputerName] <String[]> [-Credential] <PSCredential> [-Port <I
 ### Key
 ```
 New-SSHSession [-ComputerName] <String[]> [-Credential] <PSCredential> [-Port <Int32>] [-ProxyServer <String>]
- [-ProxyPort <Int32>] [-ProxyCredential <PSCredential>] [-ProxyType <String>] [-KeyFile <String>]
+ [-ProxyPort <Int32>] [-ProxyCredential <PSCredential>] [-ProxyType <String>] [-KeyFile <String>] [-KeyPhrase <string>]
  [-ConnectionTimeout <Int32>] [-KeepAliveInterval <Int32>] [-AcceptKey] [-Force]
  [-ErrorOnUntrusted] [-KnownHost <IStore>] [<CommonParameters>]
 ```
@@ -34,6 +34,14 @@ New-SSHSession [-ComputerName] <String[]> [-Credential] <PSCredential> [-Port <I
 New-SSHSession [-ComputerName] <String[]> [-Credential] <PSCredential> [-Port <Int32>] [-ProxyServer <String>]
  [-ProxyPort <Int32>] [-ProxyCredential <PSCredential>] [-ProxyType <String>] [-KeyString <String[]>]
  [-ConnectionTimeout <Int32>] [-KeepAliveInterval <Int32>] [-AcceptKey] [-Force]
+ [-ErrorOnUntrusted] [-KnownHost <IStore>] [<CommonParameters>]
+```
+
+### UserPasswordAndKeyAuthentication
+```
+New-SSHSession [-ComputerName] <String[]> [-Credential] <PSCredential> [-Port <Int32>] [-ProxyServer <String>] 
+ [-ProxyPort <Int32>] [-ProxyCredential <PSCredential>] [-ProxyType <String>] [-KeyString <String[]>] [-KeyPhrase <string>]
+ [-ConnectionTimeout <Int32>] [-KeepAliveInterval <Int32>] [-AcceptKey] [-Force] <-IsUserPasswordAndKeyAuthentication>
  [-ErrorOnUntrusted] [-KnownHost <IStore>] [<CommonParameters>]
 ```
 
@@ -219,6 +227,21 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
+### -IsUserPasswordAndKeyAuthentication
+Indicate to the module that the authentication will be with the user credentials and the key
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: UserPasswordAndKeyAuthentication
+Aliases:
+
+Required: true
+Position: Named
+Default value: False
+Accept pipeline input: false
+Accept wildcard characters: False
+```
+
 ### -ErrorOnUntrusted
 Throw a terminating error if the host key is not a trusted one.
 
@@ -239,7 +262,7 @@ OpenSSH format SSH private key file.
 
 ```yaml
 Type: String
-Parameter Sets: Key
+Parameter Sets: Key, UserPasswordAndKeyAuthentication
 Aliases:
 
 Required: False
@@ -254,7 +277,22 @@ OpenSSH key in a string array to be used for authentication.
 
 ```yaml
 Type: String[]
-Parameter Sets: KeyString
+Parameter Sets: KeyString, UserPasswordAndKeyAuthentication
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -KeyPhrase
+If a key file is used, it is used for the Key passphrase.
+
+```yaml
+Type: String[]
+Parameter Sets: KeyString, UserPasswordAndKeyAuthentication
 Aliases:
 
 Required: False

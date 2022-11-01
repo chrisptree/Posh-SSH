@@ -73,7 +73,6 @@ namespace SSH
                 sshkey = new PrivateKeyFile(keyFileStream);
             else
                 sshkey = new PrivateKeyFile(keyFileStream, keyPhrase.ToUnsecureString());
-
             if (proxyserver != String.Empty)
             {
                 // Set the proper proxy type

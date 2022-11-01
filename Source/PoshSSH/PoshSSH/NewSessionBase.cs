@@ -40,12 +40,12 @@ namespace SSH
             Position = 1,
             HelpMessage = "SSH Credentials to use for connecting to a server.")]
         [Parameter(Mandatory = true,
-            ParameterSetName = "password",
+            ParameterSetName = "NoKey",
             ValueFromPipelineByPropertyName = true,
             Position = 1,
             HelpMessage = "SSH Credentials to use for connecting to a server.")]
         [Parameter(Mandatory = true,
-            ParameterSetName = "UserPasswordAndKeyCredential",
+            ParameterSetName = "UserPasswordAndKeyAuthentication",
             ValueFromPipelineByPropertyName = true,
             Position = 1,
             HelpMessage = "SSH Credentials to use for connecting to a server.")]
@@ -69,12 +69,12 @@ namespace SSH
             HelpMessage = "OpenSSH format SSH private key file.")]
         [Parameter(Mandatory = false,
             ValueFromPipelineByPropertyName = true,
-            ParameterSetName = "UserPasswordAndKeyCredential",
+            ParameterSetName = "UserPasswordAndKeyAuthentication",
             HelpMessage = "OpenSSH format SSH private key file.")]
         public string KeyFile { get; set; } = null;
 
         /// <summary>
-        /// SSH Key File
+        /// SSH Key File pass phrase to open the file
         /// </summary>
         [Parameter(Mandatory = false,
             ValueFromPipelineByPropertyName = true,
@@ -82,25 +82,25 @@ namespace SSH
             HelpMessage = "Key phrase to use to open the SSH private key file.")]
         [Parameter(Mandatory = false,
             ValueFromPipelineByPropertyName = true,
-            ParameterSetName = "UserPasswordAndKeyCredential",
+            ParameterSetName = "UserPasswordAndKeyAuthentication",
             HelpMessage = "Key phrase to use to open the SSH private key file.")]
         public SecureString KeyPhrase { get; set; } = null;
 
         /// <summary>
         /// SSH Key Content
         /// </summary>
-        [Parameter(Mandatory = false,
+        [Parameter(Mandatory = true,
             ValueFromPipelineByPropertyName = true,
             ParameterSetName = "KeyString",
             HelpMessage = "String array of the content of a OpenSSH key file.")]
         public string[] KeyString { get; set; } = new string[] { };
 
         /// <summary>
-        /// Auto Accept key fingerprint 
+        /// Switch to indicate to use the username/password and key authentication 
         /// </summary>
         [Parameter(Mandatory = true,
             ValueFromPipelineByPropertyName = true,
-            ParameterSetName = "UserPasswordAndKeyCredential",
+            ParameterSetName = "UserPasswordAndKeyAuthentication",
             HelpMessage = "Indicate that the authentication is the usename/password and the key is used to authenticate the session")]
         public SwitchParameter IsUserPasswordAndKeyAuthentication { get; set; } = false;
 
@@ -188,7 +188,7 @@ namespace SSH
             ValueFromPipelineByPropertyName = true,
             HelpMessage = "Raise an exception if the fingerprint is not trusted for the host.")]
         public SwitchParameter ErrorOnUntrusted { get; set; } = false;
-        
+
         /// <summary>
         /// Place where fingerprint can persist
         /// </summary>
@@ -259,6 +259,11 @@ namespace SSH
 
                 case "Key":
                     WriteVerbose("Using SSH Key authentication for connection (file).");
+                    if (KeyPhrase == null && Credential.GetNetworkCredential().Password != String.Empty)
+                    {
+                        WriteWarning("Using the credential password to open the key file will no longer supported in the next major release. Use KeyPhrase instead.");
+                        KeyPhrase = Credential.Password;
+                    }
                     pathinfo = GetResolvedProviderPathFromPSPath(KeyFile, out provider);
                     localfullPath = pathinfo[0];
                     connectInfo = ConnectionInfoGenerator.GetKeyConnectionInfo(computer,
@@ -285,7 +290,7 @@ namespace SSH
                         ProxyCredential);
                     break;
 
-                case "UserPasswordAndKeyCredential":
+                case "UserPasswordAndKeyAuthentication":
                     WriteVerbose("Using Username/Password and SSH Key authentication for connection (file).");
                     pathinfo = GetResolvedProviderPathFromPSPath(KeyFile, out provider);
                     localfullPath = pathinfo[0];
@@ -305,7 +310,7 @@ namespace SSH
                     break;
             }
 
-            
+
             //Create instance of SSH Client with connection info
             BaseClient client;
             switch (Protocol)
@@ -391,7 +396,8 @@ namespace SSH
                             if (e.CanTrust)
                             {
                                 bool keySaved = KnownHost.SetKey(computer1, e.HostKeyName, fingerPrint);
-                                if (isVerboseEnabled) {
+                                if (isVerboseEnabled)
+                                {
                                     Host.UI.WriteVerboseLine(
                                         string.Format("Host key for {0} ({1}) {2} to store",
                                             computer1,
@@ -451,7 +457,8 @@ namespace SSH
             foreach (var computer in ComputerName)
             {
                 var client = CreateConnection(computer);
-                if (client != default) {
+                if (client != default)
+                {
                     if (Protocol == PoshSessionType.SSH)
                         WriteObject(SshModHelper.AddToSshSessionCollection(client as SshClient, SessionState), true);
                     else

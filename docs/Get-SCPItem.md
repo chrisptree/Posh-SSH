@@ -15,28 +15,39 @@ Download from a remote server via SCP a file or directory.
 ### NoKey (Default)
 ```
 Get-SCPItem -Destination <String> -Path <String> -PathType <String> [-NewName <String>]
- [-PathTransformation <String>] [-ComputerName] <String[]> [-Credential] <PSCredential> [-Port <Int32>]
- [-ProxyServer <String>] [-ProxyPort <Int32>] [-ProxyCredential <PSCredential>] [-ProxyType <String>]
- [-ConnectionTimeout <Int32>] [-OperationTimeout <Int32>] [-KeepAliveInterval <Int32>] [-AcceptKey] [-Force]
- [-ErrorOnUntrusted] [-KnownHost <IStore>] [<CommonParameters>]
+ [-PathTransformation <String>] [-ComputerName] <String[]> [-Credential] <PSCredential> [-Port <Int32>] [-ProxyServer <String>]
+ [-ProxyPort <Int32>] [-ProxyCredential <PSCredential>] [-ProxyType <String>] [-ConnectionTimeout <Int32>]
+ [-OperationTimeout <Int32>] [-KeepAliveInterval <Int32>] [-AcceptKey] [-Force] [-ErrorOnUntrusted]
+ [-KnownHost <IStore>] [<CommonParameters>]
 ```
 
 ### Key
 ```
 Get-SCPItem -Destination <String> -Path <String> -PathType <String> [-NewName <String>]
+ [-PathTransformation <String>] [-ComputerName] <String[]> [[-Credential] <PSCredential>] [-Port <Int32>]
+ [-KeyFile <String>] [-KeyPhrase <SecureString>] [-ProxyServer <String>] [-ProxyPort <Int32>]
+ [-ProxyCredential <PSCredential>] [-ProxyType <String>] [-ConnectionTimeout <Int32>]
+ [-OperationTimeout <Int32>] [-KeepAliveInterval <Int32>] [-AcceptKey] [-Force] [-ErrorOnUntrusted]
+ [-KnownHost <IStore>] [<CommonParameters>]
+```
+
+### UserPasswordAndKeyCredential
+```
+Get-SCPItem -Destination <String> -Path <String> -PathType <String> [-NewName <String>]
  [-PathTransformation <String>] [-ComputerName] <String[]> [-Credential] <PSCredential> [-Port <Int32>]
- [-ProxyServer <String>] [-ProxyPort <Int32>] [-ProxyCredential <PSCredential>] [-ProxyType <String>]
- [-KeyFile <String>] [-ConnectionTimeout <Int32>] [-OperationTimeout <Int32>] [-KeepAliveInterval <Int32>]
- [-AcceptKey] [-Force] [-ErrorOnUntrusted] [-KnownHost <IStore>] [<CommonParameters>]
+ [-KeyFile <String>] [-KeyPhrase <SecureString>] [-IsUserPasswordAndKeyAuthentication] [-ProxyServer <String>]
+ [-ProxyPort <Int32>] [-ProxyCredential <PSCredential>] [-ProxyType <String>] [-ConnectionTimeout <Int32>]
+ [-OperationTimeout <Int32>] [-KeepAliveInterval <Int32>] [-AcceptKey] [-Force] [-ErrorOnUntrusted]
+ [-KnownHost <IStore>] [<CommonParameters>]
 ```
 
 ### KeyString
 ```
 Get-SCPItem -Destination <String> -Path <String> -PathType <String> [-NewName <String>]
- [-PathTransformation <String>] [-ComputerName] <String[]> [-Credential] <PSCredential> [-Port <Int32>]
+ [-PathTransformation <String>] [-ComputerName] <String[]> [-Port <Int32>] [-KeyString <String[]>]
  [-ProxyServer <String>] [-ProxyPort <Int32>] [-ProxyCredential <PSCredential>] [-ProxyType <String>]
- [-KeyString <String[]>] [-ConnectionTimeout <Int32>] [-OperationTimeout <Int32>] [-KeepAliveInterval <Int32>]
- [-AcceptKey] [-Force] [-ErrorOnUntrusted] [-KnownHost <IStore>] [<CommonParameters>]
+ [-ConnectionTimeout <Int32>] [-OperationTimeout <Int32>] [-KeepAliveInterval <Int32>] [-AcceptKey] [-Force]
+ [-ErrorOnUntrusted] [-KnownHost <IStore>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -111,7 +122,19 @@ If a key file is used the password field is used for the Key pass phrase.
 
 ```yaml
 Type: PSCredential
-Parameter Sets: (All)
+Parameter Sets: Key
+Aliases:
+
+Required: False
+Position: 1
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+```yaml
+Type: PSCredential
+Parameter Sets: password, UserPasswordAndKeyCredential
 Aliases:
 
 Required: True
@@ -171,7 +194,7 @@ OpenSSH format SSH private key file.
 
 ```yaml
 Type: String
-Parameter Sets: Key
+Parameter Sets: Key, UserPasswordAndKeyCredential
 Aliases:
 
 Required: False
@@ -376,6 +399,36 @@ Required: False
 Position: Named
 Default value: None
 Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -IsUserPasswordAndKeyAuthentication
+Indicate that the authentication is the usename/password and the key is used to authenticate the session
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: UserPasswordAndKeyCredential
+Aliases:
+
+Required: True
+Position: Named
+Default value: False
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -KeyPhrase
+Key phrase to use to open the SSH private key file.
+
+```yaml
+Type: SecureString
+Parameter Sets: Key, UserPasswordAndKeyCredential
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 

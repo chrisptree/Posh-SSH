@@ -24,7 +24,7 @@ Set-SCPItem [-Path] <String> [-Destination] <String> [-NewName <String>] [-PathT
 ### Key
 ```
 Set-SCPItem [-Path] <String> [-Destination] <String> [-NewName <String>] [-PathTransformation <String>]
- [-ComputerName] <String[]> [-Credential] <PSCredential> [-Port <Int32>] [-ProxyServer <String>]
+ [-ComputerName] <String[]> [-Credential] <PSCredential> [-Port <Int32>] [-ProxyServer <String>] [-KeyPhrase <string>]
  [-ProxyPort <Int32>] [-ProxyCredential <PSCredential>] [-ProxyType <String>] [-KeyFile <String>]
  [-ConnectionTimeout <Int32>] [-OperationTimeout <Int32>] [-KeepAliveInterval <Int32>] [-AcceptKey] [-Force]
  [-ErrorOnUntrusted] [-KnownHost <IStore>] [<CommonParameters>]
@@ -33,10 +33,18 @@ Set-SCPItem [-Path] <String> [-Destination] <String> [-NewName <String>] [-PathT
 ### KeyString
 ```
 Set-SCPItem [-Path] <String> [-Destination] <String> [-NewName <String>] [-PathTransformation <String>]
- [-ComputerName] <String[]> [-Credential] <PSCredential> [-Port <Int32>] [-ProxyServer <String>]
+ [-ComputerName] <String[]> [-Credential] <PSCredential> [-Port <Int32>] [-ProxyServer <String>] [-KeyPhrase <string>]
  [-ProxyPort <Int32>] [-ProxyCredential <PSCredential>] [-ProxyType <String>] [-KeyString <String[]>]
  [-ConnectionTimeout <Int32>] [-OperationTimeout <Int32>] [-KeepAliveInterval <Int32>] [-AcceptKey] [-Force]
  [-ErrorOnUntrusted] [-KnownHost <IStore>] [<CommonParameters>]
+```
+
+### UserPasswordAndKeyAuthentication
+```
+Set-SCPItem [-Path] <String> [-Destination] <String> [-NewName <String>] [-PathTransformation <String>]
+ [-ComputerName] <String[]> [-Credential] <PSCredential> [-Port <Int32>] [-ProxyServer <String>] [-KeyPhrase <string>]
+ [-ProxyPort <Int32>] [-ProxyCredential <PSCredential>] [-ProxyType <String>] [-KeyFile <String>]
+ [-ConnectionTimeout <Int32>] [-OperationTimeout <Int32>] [-KeepAliveInterval <Int32>] [-AcceptKey] [-Force] <-IsUserPasswordAndKeyAuthentication>
 ```
 
 ## DESCRIPTION
@@ -106,7 +114,6 @@ Accept wildcard characters: False
 
 ### -Credential
 SSH Credentials to use for connecting to a server.
-If a key file is used the password field is used for the Key pass phrase.
 
 ```yaml
 Type: PSCredential
@@ -165,12 +172,42 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
+### -IsUserPasswordAndKeyAuthentication
+Indicate to the module that the authentication will be with the user credentials and the key
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: UserPasswordAndKeyAuthentication
+Aliases:
+
+Required: true
+Position: Named
+Default value: False
+Accept pipeline input: false
+Accept wildcard characters: False
+```
+
 ### -KeyFile
 OpenSSH format SSH private key file.
 
 ```yaml
 Type: String
-Parameter Sets: Key
+Parameter Sets: Key, UserPasswordAndKeyAuthentication
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -KeyPhrase
+If a key file is used, it is used for the Key passphrase.
+
+```yaml
+Type: String
+Parameter Sets: Key, useer
 Aliases:
 
 Required: False
