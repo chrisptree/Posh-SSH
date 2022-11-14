@@ -9,7 +9,7 @@ using System.Security;
 namespace SSH
 {
     // Class for creating PS Custom Objects
-    public class SshModHelper
+    public static class SshModHelper
     {
         // Create Custom Object from Hashtable
         public static PSObject CreateCustom(Hashtable properties)
@@ -22,17 +22,25 @@ namespace SSH
             return obj;
         }
 
-        public static String SecureStringToString(SecureString value)
+        /// <summary>
+        /// Converts a <see cref="SecureString"/> to an unsecure string.
+        /// </summary>
+        /// <param name="secureString">The <see cref="SecureString"/> to operate on</param>
+        /// <returns>An unsecure string</returns>
+        public static string ToUnsecureString(this SecureString secureString)
         {
-            IntPtr valuePtr = IntPtr.Zero;
+            if (secureString == null) return null;
+
+            var unmanagedString = IntPtr.Zero;
+
             try
             {
-                valuePtr = Marshal.SecureStringToGlobalAllocUnicode(value);
-                return Marshal.PtrToStringUni(valuePtr);
+                unmanagedString = Marshal.SecureStringToGlobalAllocUnicode(secureString);
+                return Marshal.PtrToStringUni(unmanagedString);
             }
             finally
             {
-                Marshal.ZeroFreeGlobalAllocUnicode(valuePtr);
+                Marshal.ZeroFreeGlobalAllocUnicode(unmanagedString);
             }
         }
 

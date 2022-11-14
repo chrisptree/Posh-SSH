@@ -56,7 +56,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ToUnsecureString.cs" />
     <Compile Include="ConnectionInfoGenerator.cs" />
     <Compile Include="GetScpFile.cs" />
     <Compile Include="GetScpFolder.cs" />
